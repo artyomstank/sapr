@@ -8,21 +8,6 @@ interface RodEditorProps {
 }
 
 const RodEditor: React.FC<RodEditorProps> = ({ rods, onChange }) => {
-    const addRod = () => {
-        const newId = rods.length > 0 ? Math.max(...rods.map(r => r.id)) + 1 : 0;
-        onChange([
-            ...rods,
-            {
-                id: newId,
-                length: 1.0,
-                area: 0.01,
-                elasticModulus: 2.1e11, // Сталь
-                allowableStress: 250e6,
-                distributedLoad: 0.0,
-            },
-        ]);
-    };
-
     const updateRod = (index: number, field: keyof Rod, value: string | number) => {
         const updated = [...rods];
 
@@ -75,7 +60,7 @@ const RodEditor: React.FC<RodEditorProps> = ({ rods, onChange }) => {
 
     return (
         <div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9em' }}>
+            <table style={{ width: '80%', borderCollapse: 'collapse', fontSize: '1em' }}>
                 <thead>
                 <tr>
                     <th>ID</th>
@@ -89,10 +74,12 @@ const RodEditor: React.FC<RodEditorProps> = ({ rods, onChange }) => {
                 </thead>
                 <tbody>
                 {rods.map((rod, i) => (
-                    <tr key={rod.id}>
+                    <tr key={rod.id} style={{
+                                backgroundColor:  '#efefefff'
+                            }}>
                         <td style={{
                             textAlign: 'center',
-                            padding: '4px',
+                            padding: '15px',
                             fontWeight: 'bold'
                         }}>
                             {rod.id}
@@ -166,8 +153,8 @@ const RodEditor: React.FC<RodEditorProps> = ({ rods, onChange }) => {
                             <button
                                 onClick={() => removeRod(i)}
                                 style={{
-                                    color: 'red',
-                                    background: 'none',
+                                    color: 'white',
+                                    background: '#db4f4fff',
                                     border: 'none',
                                     fontSize: '1.2em',
                                     cursor: 'pointer',
@@ -181,7 +168,6 @@ const RodEditor: React.FC<RodEditorProps> = ({ rods, onChange }) => {
                 ))}
                 </tbody>
             </table>
-            <button onClick={addRod} style={{ marginTop: '0.5rem' }}>+ Добавить стержень</button>
         </div>
     );
 };

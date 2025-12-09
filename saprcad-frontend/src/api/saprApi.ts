@@ -2,21 +2,24 @@
 import axios from 'axios';
 import {FullResult, StructureInput} from '../types/sapr.types';
 
-const API_BASE = 'http://localhost:8081/api/saprcad';
+const API_BASE = 'http://localhost:8080/api';
 
-export interface DisplacementVector {
-    displacements: number[];
+export interface ValidationResponse {
+    nodes: any[];
+    rods: any[];
+    errors: string[];
+    warnings: string[];
 }
 
 export const saprApi = {
-    // Валидация (можно использовать перед расчётом)
+    // Валидация структуры
     validate: (data: StructureInput) =>
-        axios.post<string>(`${API_BASE}/submit`, data),
+        axios.post<ValidationResponse>(`${API_BASE}/structure/preview`, data),
 
-    // Полный расчёт
+    // Для совместимости используем тот же эндпоинт
     calculate: (data: StructureInput) =>
-        axios.post<DisplacementVector>(`${API_BASE}/calculate-structure`, data),
+        axios.post<{displacements: number[]}>(`${API_BASE}/structure/preview`, data),
 
     fullCalculation: (data: StructureInput) =>
-        axios.post<FullResult>(`${API_BASE}/full-calculation`, data)
+        axios.post<FullResult>(`${API_BASE}/structure/preview`, data)
 };

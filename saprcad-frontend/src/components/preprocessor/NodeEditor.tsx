@@ -13,18 +13,6 @@ const NodeEditor: React.FC<NodeEditorProps> = ({ nodes, rods, onChange }) => {
         return nodeIndex === 0 || nodeIndex === nodes.length - 1;
     };
 
-    const addNode = () => {
-        const newId = nodes.length > 0 ? Math.max(...nodes.map(n => n.id)) + 1 : 0;
-        onChange([
-            ...nodes,
-            {
-                id: newId,
-                fixed: false,
-                externalForce: 0.0,
-            },
-        ]);
-    };
-
     const updateNode = (index: number, field: keyof Node, value: string | boolean | number) => {
         const updated = [...nodes];
 
@@ -103,101 +91,112 @@ const NodeEditor: React.FC<NodeEditorProps> = ({ nodes, rods, onChange }) => {
     };
 
     return (
-        <div>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9em' }}>
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th style={{ textAlign: 'center' }}>Заделка</th>
-                    <th>Fj (Н)</th>
-                    <th>Позиция</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                {nodes.map((node, i) => (
-                    <tr key={node.id} style={{
-                        backgroundColor: canFixNode(i) ? '#f0f8ff' : '#fff9f9'
-                    }}>
-                        <td style={{
-                            textAlign: 'center',
-                            padding: '4px',
-                            fontWeight: 'bold'
-                        }}>
-                            {node.id}
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
-                            <input
-                                type="checkbox"
-                                checked={node.fixed}
-                                disabled={!canFixNode(i)}
-                                onChange={e => updateNode(i, 'fixed', e.target.checked)}
-                                title={!canFixNode(i) ? "Заделки можно ставить только на крайних узлах" : ""}
-                            />
-                            {!canFixNode(i) && node.fixed && (
-                                <span style={{color: 'red', fontSize: '0.8em', marginLeft: '5px'}}>⚠️</span>
-                            )}
-                        </td>
-                        <td>
-                            <input
-                                type="text"
-                                value={getDisplayValue(node)}
-                                onChange={e => handleForceInput(i, e.target.value)}
-                                onBlur={(e) => {
-                                    const value = e.target.value;
-                                    if (value === '' || value === '-' || value === '-.') {
-                                        updateNode(i, 'externalForce', 0);
-                                    } else {
-                                        // При потере фокуса нормализуем значение
-                                        const numValue = parseFloat(value);
-                                        if (isNaN(numValue)) {
-                                            updateNode(i, 'externalForce', 0);
-                                        } else {
-                                            updateNode(i, 'externalForce', numValue);
-                                        }
-                                    }
-                                }}
-                                placeholder="0"
-                                style={{ width: '80px', textAlign: 'right' }}
-                            />
-                        </td>
-                        <td style={{ fontSize: '0.8em', color: '#666', textAlign: 'center' }}>
-                            {i === 0 && 'Начало'}
-                            {i === nodes.length - 1 && 'Конец'}
-                            {i > 0 && i < nodes.length - 1 && 'Середина'}
-                        </td>
-                        <td style={{ textAlign: 'center' }}>
-                            <button
-                                onClick={() => removeNode(i)}
-                                style={{
-                                    color: 'red',
-                                    background: 'none',
-                                    border: 'none',
-                                    fontSize: '1.2em',
-                                    cursor: 'pointer',
-                                    padding: '2px 6px'
-                                }}
-                                title="Удалить узел"
-                            >
-                                ×
-                            </button>
-                        </td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
-            <button onClick={addNode} style={{ marginTop: '0.5rem' }}>+ Добавить узел</button>
-
-            {/* Подсказка для пользователя */}
-            <div style={{
-                marginTop: '0.5rem',
-                fontSize: '0.8em',
-                color: '#666',
-                padding: '0.5rem',
-                backgroundColor: '#f5f5f5',
-                borderRadius: '4px'
+        <div style={{ width: '100%', maxWidth: '100%' }}>
+            <div style={{ 
+                display: 'flex', 
+                alignItems: 'flex-start', 
+                gap: '1rem',
+                width: '100%'
             }}>
-                Заделки можно устанавливать только на крайних узлах конструкции (отмечены голубым фоном)
+                {/* Таблица узлов */}
+                <div style={{ flex: 1 }}>
+                    <table style={{ 
+                        width: '100%', 
+                        borderCollapse: 'collapse', 
+                        fontSize: '0.9em',
+                        minWidth: '400px'
+                    }}>
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th style={{ textAlign: 'center' }}>Заделка</th>
+                            <th style={{ textAlign: 'center' }}>Fj (Н)</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {nodes.map((node, i) => (
+                            <tr key={node.id} style={{
+                                backgroundColor: canFixNode(i) ? '#a1edafff' : '#efefefff'
+                            }}>
+                                <td style={{
+                                    textAlign: 'center',
+                                    padding: '15px',
+                                    fontWeight: 'bold'
+                                }}>
+                                    {node.id}
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={node.fixed}
+                                        disabled={!canFixNode(i)}
+                                        onChange={e => updateNode(i, 'fixed', e.target.checked)}
+                                        title={!canFixNode(i) ? "Заделки можно ставить только на крайних узлах" : ""}
+                                    />
+                                    {!canFixNode(i) && node.fixed && (
+                                        <span style={{color: 'red', fontSize: '0.8em', marginLeft: '5px'}}>⚠️</span>
+                                    )}
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                    <input
+                                        type="text"
+                                        value={getDisplayValue(node)}
+                                        onChange={e => handleForceInput(i, e.target.value)}
+                                        onBlur={(e) => {
+                                            const value = e.target.value;
+                                            if (value === '' || value === '-' || value === '-.') {
+                                                updateNode(i, 'externalForce', 0);
+                                            } else {
+                                                // При потере фокуса нормализуем значение
+                                                const numValue = parseFloat(value);
+                                                if (isNaN(numValue)) {
+                                                    updateNode(i, 'externalForce', 0);
+                                                } else {
+                                                    updateNode(i, 'externalForce', numValue);
+                                                }
+                                            }
+                                        }}
+                                        placeholder="0"
+                                        style={{ width: '60px', textAlign: 'right' }}
+                                    />
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                    <button
+                                        onClick={() => removeNode(i)}
+                                        style={{
+                                            color: 'white',
+                                            background: '#db4f4fff',
+                                            border: 'none',
+                                            fontSize: '1.2em',
+                                            cursor: 'pointer',
+                                            padding: '2px 6px'
+                                        }}
+                                        title="Удалить узел"
+                                    >
+                                        ×
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Подсказка для пользователя - теперь справа от таблицы */}
+                <div style={{
+                    marginTop: '0',
+                    fontSize: '1em',
+                    color: '#666',
+                    padding: '1.2rem',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '4px',
+                    maxWidth: '0px',
+                    minWidth: '400px',
+                    flexShrink: 0
+                }}>
+                    Заделки можно устанавливать только на крайних узлах конструкции (отмечены зеленым цветом)
+                </div>
             </div>
         </div>
     );

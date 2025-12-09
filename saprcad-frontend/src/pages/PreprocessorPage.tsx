@@ -51,22 +51,45 @@ const PreprocessorPage: React.FC = () => {
         }
     };
 
+    // Функции для добавления узлов и стержней
+    const handleAddNode = () => {
+        const newId = project.nodes.length > 0 ? Math.max(...project.nodes.map(n => n.id)) + 1 : 0;
+        setProject({
+            ...project,
+            nodes: [
+                ...project.nodes,
+                {
+                    id: newId,
+                    fixed: false,
+                    externalForce: 0.0,
+                },
+            ],
+        });
+    };
+
+    const handleAddRod = () => {
+        const newId = project.rods.length > 0 ? Math.max(...project.rods.map(r => r.id)) + 1 : 0;
+        
+        setProject({
+            ...project,
+            rods: [
+                ...project.rods,
+                {
+                    id: newId,
+                    length: 1.0,
+                    area: 0.01,
+                    elasticModulus: 2.1e11,
+                    allowableStress: 250e6,
+                    distributedLoad: 0.0,
+                },
+            ],
+        });
+    };
+
     return (
         <div key={componentKey} style={{ padding: '1.5rem', fontFamily: 'Arial, sans-serif', maxWidth: '1400px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h2>Препроцессор: ввод данных и визуализация</h2>
-                <button
-                    onClick={clearProject}
-                    style={{
-                        padding: '6px 12px',
-                        backgroundColor: '#e0e0e0',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                    }}
-                >
-                    Очистить проект
-                </button>
             </div>
 
             {errors.length > 0 && (
@@ -84,28 +107,36 @@ const PreprocessorPage: React.FC = () => {
                 onUploadJson={(file) => loadFromFile(file)}
                 onSaveJson={saveToFile}
                 onCalculate={handleCalculate}
+                onClearProject={clearProject}
+                onAddNode={handleAddNode}
+                onAddRod={handleAddRod}
                 disabled={loading}
+                showNodeRodControls={true}
             />
 
-            <div style={{ display: 'flex', gap: '2rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, minWidth: '400px', overflowX: 'auto' }}>
-                    <h3>Стержни</h3>
-                    <RodEditor
-                        rods={project.rods}
-                        onChange={(rods) => setProject({ ...project, rods })}
-                    />
-                </div>
-                <div style={{ flex: 1, minWidth: '400px', overflowX: 'auto' }}>
+            <h3 style={{ marginTop: '1.5rem', marginBottom: '1rem' }}>Визуализация конструкции</h3>
+            <BeamVisualizer project={project} />
+
+            <div style={{ marginTop: '2rem' }}>
+                <div style={{ marginBottom: '2rem' }}>
                     <h3>Узлы</h3>
-                    <NodeEditor
-                        nodes={project.nodes}
-                        onChange={(nodes) => setProject({ ...project, nodes })} rods={[]}
-                    />
+                    <div style={{ overflowX: 'auto' }}>
+                        <NodeEditor
+                            nodes={project.nodes}
+                            onChange={(nodes) => setProject({ ...project, nodes })} rods={project.rods}
+                        />
+                    </div>
+                </div>
+                <div>
+                    <h3>Стержни</h3>
+                    <div style={{ overflowX: 'auto' }}>
+                        <RodEditor
+                            rods={project.rods}
+                            onChange={(rods) => setProject({ ...project, rods })}
+                        />
+                    </div>
                 </div>
             </div>
-
-            <h3 style={{ marginTop: '2rem', marginBottom: '1rem' }}>Визуализация конструкции</h3>
-            <BeamVisualizer project={project} />
         </div>
     );
 };

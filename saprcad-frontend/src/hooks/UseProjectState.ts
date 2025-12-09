@@ -16,14 +16,20 @@ export const useProjectState = () => {
         setLoading(true);
         setErrors([]);
         try {
-            // Сначала валидация
-            await saprApi.validate(project);
+            // Отправляем данные на бэкенд для валидации и расчёта
+            const response = await saprApi.validate(project);
+            
+            // Проверяем наличие ошибок в ответе
+            if (response.data.errors && response.data.errors.length > 0) {
+                setErrors(response.data.errors);
+                return { success: false };
+            }
 
-            // Расчёт
-            const response = await saprApi.calculate(project);
-            return { success: true, displacements: response.data.displacements };
+            // Если ошибок нет, считаем расчёт успешным
+            // Пока возвращаем пустой массив смещений, до тех пор пока бэкенд их не вернёт
+            return { success: true, displacements: [] };
         } catch (err: any) {
-            const errMsgs = err.response?.data || ['Ошибка расчёта'];
+            const errMsgs = err.response?.data?.errors || err.response?.data || ['Ошибка расчёта'];
             setErrors(Array.isArray(errMsgs) ? errMsgs : [errMsgs]);
             return { success: false };
         } finally {
