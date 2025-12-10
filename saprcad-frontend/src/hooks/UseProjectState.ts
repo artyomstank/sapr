@@ -12,26 +12,27 @@ export const useProjectState = () => {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<string[]>([]);
 
-    const validateAndCalculate = async (): Promise<{ success: boolean; displacements?: number[] }> => {
+    const validateAndCalculate = async (): Promise<{ success: boolean; displacements?: number[]; errorMessage?: string }> => {
         setLoading(true);
         setErrors([]);
         try {
-            // Отправляем данные на бэкенд для валидации и расчёта
-            const response = await saprApi.validate(project);
-            
-            // Проверяем наличие ошибок в ответе
-            if (response.data.errors && response.data.errors.length > 0) {
-                setErrors(response.data.errors);
-                return { success: false };
+            // Сначала валидация
+            const validateResponse = await saprApi.validate(project);
+            if (validateResponse.data.errors && validateResponse.data.errors.length > 0) {
+                const errorMessage = validateResponse.data.errors.join('\n');
+                setErrors(validateResponse.data.errors);
+                return { success: false, errorMessage };
             }
 
-            // Если ошибок нет, считаем расчёт успешным
-            // Пока возвращаем пустой массив смещений, до тех пор пока бэкенд их не вернёт
-            return { success: true, displacements: [] };
+            // Расчёт смещений
+            const response = await saprApi.calculate(project);
+            return { success: true, displacements: response.data.displacements };
         } catch (err: any) {
             const errMsgs = err.response?.data?.errors || err.response?.data || ['Ошибка расчёта'];
-            setErrors(Array.isArray(errMsgs) ? errMsgs : [errMsgs]);
-            return { success: false };
+            const errorArray = Array.isArray(errMsgs) ? errMsgs : [errMsgs];
+            const errorMessage = errorArray.join('\n');
+            setErrors(errorArray);
+            return { success: false, errorMessage };
         } finally {
             setLoading(false);
         }

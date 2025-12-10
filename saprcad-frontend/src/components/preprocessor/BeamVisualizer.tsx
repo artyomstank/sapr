@@ -20,17 +20,19 @@ const BeamVisualizer: React.FC<BeamVisualizerProps> = ({ project }) => {
         return <div className="beam-placeholder">Добавьте стержни и узлы</div>;
     }
 
-    // Константы для визуализации
-    const BASE_LENGTH_SCALE = 80;
-    const MIN_ROD_WIDTH = 30;
-    const MAX_ROD_WIDTH = 200;
-    const MAX_TOTAL_WIDTH = 1000;
-    const MIN_TOTAL_WIDTH = 400;
+    // Константы для визуализации (еще больше увеличиваем)
+    const BASE_LENGTH_SCALE = 120;
+    const MIN_ROD_WIDTH = 50;
+    const MAX_ROD_WIDTH = 300;
+    const MAX_TOTAL_WIDTH = 1600;
+    const MIN_TOTAL_WIDTH = 600;
 
-    const MAX_HEIGHT = 25;
-    const MIN_HEIGHT = 12;
-    const ARROW_LENGTH = 25;
-    const NODE_OFFSET_X = ARROW_LENGTH + 15;
+    const MAX_HEIGHT = 60;
+    const MIN_HEIGHT = 30;
+    const ARROW_LENGTH = 50;
+    const NODE_OFFSET_X = ARROW_LENGTH + 30;
+    const SVG_HEIGHT = 500; // Очень большая высота
+    const ROD_CENTER_Y = SVG_HEIGHT / 3.5; // Поднимаем стержни выше
 
     // Рассчитываем общую длину конструкции
     const totalLength = project.rods.reduce((sum, rod) => sum + rod.length, 0);
@@ -61,7 +63,16 @@ const BeamVisualizer: React.FC<BeamVisualizerProps> = ({ project }) => {
     }
 
     // Позиции стержней и узлов
-    const rodPositions: { x: number; width: number; height: number; y: number }[] = [];
+    const rodPositions: { 
+        x: number; 
+        width: number; 
+        height: number; 
+        y: number;
+        bottomY: number;
+        topY: number;
+        rodIndex: number;
+    }[] = [];
+    
     const nodePositions: number[] = [];
 
     let currentX = NODE_OFFSET_X;
@@ -80,7 +91,7 @@ const BeamVisualizer: React.FC<BeamVisualizerProps> = ({ project }) => {
     }
 
     // Рассчитываем позиции стержней
-    for (const rod of project.rods) {
+    project.rods.forEach((rod, index) => {
         const width = Math.max(rod.length * lengthScale, MIN_ROD_WIDTH);
         let height;
 
@@ -92,53 +103,73 @@ const BeamVisualizer: React.FC<BeamVisualizerProps> = ({ project }) => {
 
         height = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, height));
 
-        const y = 100 - height / 2;
-        rodPositions.push({ x: currentX, width, height, y });
+        const y = ROD_CENTER_Y - height / 2;
+        const topY = y;
+        const bottomY = y + height;
+        
+        rodPositions.push({ 
+            x: currentX, 
+            width, 
+            height, 
+            y,
+            topY,
+            bottomY,
+            rodIndex: index
+        });
         currentX += width;
-    }
+    });
 
     // Рассчитываем позиции узлов
     currentX = NODE_OFFSET_X;
     nodePositions.push(currentX);
 
-    for (let i = 0; i < project.rods.length; i++) {
-        currentX += Math.max(project.rods[i].length * lengthScale, MIN_ROD_WIDTH);
+    project.rods.forEach((rod, i) => {
+        currentX += Math.max(rod.length * lengthScale, MIN_ROD_WIDTH);
         nodePositions.push(currentX);
-    }
+    });
 
     const finalWidth = Math.max(MIN_TOTAL_WIDTH, Math.min(MAX_TOTAL_WIDTH, requiredWidth));
     const showScaleInfo = lengthScale !== BASE_LENGTH_SCALE || minRodLength * BASE_LENGTH_SCALE < MIN_ROD_WIDTH;
 
+    // Функция для получения высоты стержня в позиции узла
+    const getRodDataAtNode = (nodeIndex: number) => {
+        if (nodeIndex === 0) {
+            // Первый узел - начало первого стержня
+            return { rod: rodPositions[0], side: 'left' as const };
+        } else if (nodeIndex === project.nodes.length - 1) {
+            // Последний узел - конец последнего стержня
+            return { rod: rodPositions[project.rods.length - 1], side: 'right' as const };
+        } else {
+            // Внутренний узел - граница между двумя стержнями
+            const leftRod = rodPositions[nodeIndex - 1];
+            const rightRod = rodPositions[nodeIndex];
+            // Возвращаем более высокий стержень для лучшей видимости
+            return leftRod.height >= rightRod.height 
+                ? { rod: leftRod, side: 'right' as const }
+                : { rod: rightRod, side: 'left' as const };
+        }
+    };
+
     // Улучшенная функция для расположения подписей узлов
     const getNodeLabelPositions = () => {
         const positions: { y: number; offset: number }[] = [];
-        const minLabelDistance = 60; // Минимальное расстояние между подписями
+        const minLabelDistance = 80;
 
         for (let i = 0; i < nodePositions.length; i++) {
             const nodeX = nodePositions[i];
-            let bestY = 150; // Базовая позиция
-            let offset = 0; // Смещение для стрелок сил
+            let bestY = ROD_CENTER_Y + MAX_HEIGHT + 50;
+            let offset = 0;
 
             // Проверяем расстояние до соседних узлов
-            if (i > 0) {
-                const prevNodeX = nodePositions[i - 1];
-                if (nodeX - prevNodeX < minLabelDistance) {
-                    // Чередуем позиции для близких узлов
-                    bestY = i % 2 === 0 ? 130 : 150;
-                }
+            if (i > 0 && nodeX - nodePositions[i - 1] < minLabelDistance) {
+                bestY = i % 2 === 0 ? ROD_CENTER_Y + MAX_HEIGHT + 30 : ROD_CENTER_Y + MAX_HEIGHT + 70;
+            }
+            if (i < nodePositions.length - 1 && nodePositions[i + 1] - nodeX < minLabelDistance) {
+                bestY = i % 2 === 0 ? ROD_CENTER_Y + MAX_HEIGHT + 30 : ROD_CENTER_Y + MAX_HEIGHT + 70;
             }
 
-            if (i < nodePositions.length - 1) {
-                const nextNodeX = nodePositions[i + 1];
-                if (nextNodeX - nodeX < minLabelDistance) {
-                    // Чередуем позиции для близких узлов
-                    bestY = i % 2 === 0 ? 130 : 150;
-                }
-            }
-
-            // Если узел имеет силу, дополнительно смещаем подпись
             if (project.nodes[i].externalForce !== 0) {
-                offset = project.nodes[i].externalForce > 0 ? 10 : -10;
+                offset = project.nodes[i].externalForce > 0 ? 15 : -15;
             }
 
             positions.push({ y: bestY, offset });
@@ -149,47 +180,106 @@ const BeamVisualizer: React.FC<BeamVisualizerProps> = ({ project }) => {
 
     const nodeLabelPositions = getNodeLabelPositions();
 
+    // Функция для отрисовки заделки
+    const renderFixedSupport = (nodeX: number, rodData: ReturnType<typeof getRodDataAtNode>, isFirstNode: boolean, isLastNode: boolean) => {
+        const { rod, side } = rodData;
+        const topY = rod.topY;
+        const bottomY = rod.bottomY;
+        const rodHeight = rod.height;
+        const hatchCount = 7;
+        const dx = 6;
+        const dy = 6;
+        
+        // Определяем начальную позицию в зависимости от стороны
+        const startX = side === 'right' ? nodeX : nodeX - dx;
+        
+        return (
+            <>
+                {/* Вертикальная линия заделки - вдоль всей высоты стержня */}
+                <line
+                    x1={nodeX}
+                    y1={topY}
+                    x2={nodeX}
+                    y2={bottomY}
+                    stroke="#2c3e50"
+                    strokeWidth="3"
+                />
+                
+                {/* Штрихи под углом 45 градусов */}
+                {[...Array(hatchCount)].map((_, idx) => {
+                    const yOffset = topY + (idx * rodHeight / (hatchCount - 1));
+                    const dy = side === 'right' ? -15 : 15; // вверх если справа, вниз если слева
+                    
+                    return (
+                        <line
+                            key={idx}
+                            x1={nodeX}
+                            y1={yOffset}
+                            x2={nodeX + (side === 'right' ? 15 : -15)}
+                            y2={yOffset + dy}
+                            stroke="#2c3e50"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                        />
+                    );
+                })}
+            </>
+        );
+    };
+
     return (
-        <div style={{ overflow: 'auto', padding: '10px 0', paddingLeft: '20px' }}>
+        <div style={{ 
+            overflow: 'auto', 
+            padding: '20px 0',
+            backgroundColor: '#fafafa', 
+            border: '1px solid #ddd',
+            borderRadius: '4px'
+        }}>
             <svg
                 width="100%"
-                height="200"
+                height={SVG_HEIGHT}
                 style={{
                     minWidth: `${MIN_TOTAL_WIDTH}px`,
-                    backgroundColor: '#fafafa',
-                    maxWidth: `${MAX_TOTAL_WIDTH}px`
+                    backgroundColor: '#fafafa'
                 }}
-                viewBox={`0 0 ${finalWidth} 200`}
+                viewBox={`0 0 ${finalWidth} ${SVG_HEIGHT}`}
+                preserveAspectRatio="xMidYMid meet"
             >
                 <defs>
                     <marker
                         id="concentratedArrow"
-                        markerWidth="8"
-                        markerHeight="8"
-                        refX="7"
-                        refY="4"
+                        markerWidth="16"
+                        markerHeight="16"
+                        refX="1"
+                        refY="8"
                         orient="auto"
                     >
-                        <line x1="0" y1="4" x2="5" y2="4" stroke="currentColor" strokeWidth="2" />
-                        <path d="M5,2 L5,6 L7,4 Z" fill="currentColor" />
+                        <line x1="0" y1="8" x2="4" y2="8" stroke="currentColor" strokeWidth="3" />
+                        <path d="M4,5 L4,11 L16,8 Z" fill="currentColor" />
                     </marker>
 
                     <marker
                         id="distributedArrow"
-                        markerWidth="4"
-                        markerHeight="4"
-                        refX="3"
-                        refY="2"
+                        markerWidth="8"
+                        markerHeight="8"
+                        refX="6"
+                        refY="4"
                         orient="auto"
                     >
-                        <path d="M0,0 L0,4 L3,2 z" fill="currentColor" />
+                        <line x1="0" y1="4" x2="3" y2="4" stroke="#ff5e00ff" strokeWidth="2" />
+                        <path d="M3,1 L3,7 L8,4 z" fill="#ff5e00ff" />
                     </marker>
+                    
+                    <linearGradient id="rodGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#4a90e2" />
+                        <stop offset="100%" stopColor="#357abd" />
+                    </linearGradient>
                 </defs>
 
                 {/* Стержни */}
                 {project.rods.map((rod, i) => {
                     const pos = rodPositions[i];
-                    const isVeryShort = rod.length * lengthScale < MIN_ROD_WIDTH;
+                    const rodCenterY = pos.y + pos.height / 2;
 
                     return (
                         <g key={rod.id}>
@@ -198,28 +288,29 @@ const BeamVisualizer: React.FC<BeamVisualizerProps> = ({ project }) => {
                                 y={pos.y}
                                 width={pos.width}
                                 height={pos.height}
-                                fill="#4a90e2"
+                                fill="url(#rodGradient)"
                                 stroke="#2c3e50"
-                                strokeWidth="1"
+                                strokeWidth="2"
+                                rx="3"
+                                ry="3"
                             />
 
-                            {/* Упрощенные подписи стержней для коротких балок */}
-                            {pos.width > 50 ? (
-                                // Полные подписи для нормальных стержней
+                            {/* Подписи стержней */}
+                            {pos.width > 70 ? (
                                 <>
                                     <circle
                                         cx={pos.x + pos.width / 2}
-                                        cy={75}
-                                        r="12"
+                                        cy={rodCenterY - pos.height / 2 - 25}
+                                        r="16"
                                         fill="#fff"
                                         stroke="#333"
-                                        strokeWidth="1"
+                                        strokeWidth="2"
                                     />
                                     <text
                                         x={pos.x + pos.width / 2}
-                                        y={79}
+                                        y={rodCenterY - pos.height / 2 - 20}
                                         textAnchor="middle"
-                                        fontSize="11"
+                                        fontSize="15"
                                         fontWeight="bold"
                                         fill="#000"
                                     >
@@ -227,39 +318,30 @@ const BeamVisualizer: React.FC<BeamVisualizerProps> = ({ project }) => {
                                     </text>
                                     <text
                                         x={pos.x + pos.width / 2}
-                                        y={45}
+                                        y={rodCenterY - pos.height / 2 - 50}
                                         textAnchor="middle"
-                                        fontSize="9"
+                                        fontSize="13"
                                         fill="#666"
+                                        fontWeight="bold"
                                     >
                                         L={rod.length.toFixed(2)}м
                                     </text>
-                                    <text
-                                        x={pos.x + pos.width / 2}
-                                        y={55}
-                                        textAnchor="middle"
-                                        fontSize="8"
-                                        fill="#888"
-                                    >
-                                        A={rod.area.toExponential(2)}м²
-                                    </text>
                                 </>
                             ) : (
-                                // Упрощенные подписи для очень коротких стержней
                                 <>
                                     <circle
                                         cx={pos.x + pos.width / 2}
-                                        cy={75}
-                                        r="8"
+                                        cy={rodCenterY - pos.height / 2 - 20}
+                                        r="12"
                                         fill="#fff"
                                         stroke="#333"
-                                        strokeWidth="1"
+                                        strokeWidth="2"
                                     />
                                     <text
                                         x={pos.x + pos.width / 2}
-                                        y={78}
+                                        y={rodCenterY - pos.height / 2 - 15}
                                         textAnchor="middle"
-                                        fontSize="8"
+                                        fontSize="12"
                                         fontWeight="bold"
                                         fill="#000"
                                     >
@@ -268,45 +350,42 @@ const BeamVisualizer: React.FC<BeamVisualizerProps> = ({ project }) => {
                                 </>
                             )}
 
-                            {/* Распределённая нагрузка - ВСЕГДА отображается если не равна 0 */}
+                            {/* Распределённая нагрузка */}
                             {rod.distributedLoad !== 0 && (
                                 <>
-                                    {/* Для очень коротких стержней - показываем только одну стрелку по центру */}
-                                    {pos.width <= 40 ? (
+                                    {pos.width <= 60 ? (
                                         <line
                                             x1={pos.x + pos.width / 2}
-                                            y1={pos.y + pos.height / 2}
-                                            x2={pos.x + pos.width / 2 + (rod.distributedLoad > 0 ? 10 : -10)}
-                                            y2={pos.y + pos.height / 2}
-                                            stroke={rod.distributedLoad > 0 ? 'green' : 'red'}
-                                            strokeWidth="2"
+                                            y1={rodCenterY}
+                                            x2={pos.x + pos.width / 2 + (rod.distributedLoad > 0 ? 18 : -18)}
+                                            y2={rodCenterY}
+                                            stroke="#999"
+                                            strokeWidth="3"
                                             markerEnd="url(#distributedArrow)"
                                         />
                                     ) : (
-                                        /* Для нормальных стержней - несколько стрелок */
                                         <>
-                                            {Array.from({ length: Math.max(2, Math.floor(pos.width / 15)) }).map((_, idx) => {
-                                                const spacing = pos.width / (Math.max(2, Math.floor(pos.width / 15)) + 1);
+                                            {Array.from({ length: Math.max(2, Math.floor(pos.width / 30)) }).map((_, idx) => {
+                                                const spacing = pos.width / (Math.max(2, Math.floor(pos.width / 30)) + 1);
                                                 const arrowX = pos.x + spacing * (idx + 1);
                                                 const direction = rod.distributedLoad > 0 ? 1 : -1;
-                                                const arrowLength = 8;
+                                                const arrowLength = 15;
 
                                                 return (
                                                     <line
                                                         key={idx}
                                                         x1={arrowX}
-                                                        y1={pos.y + pos.height / 2}
+                                                        y1={rodCenterY}
                                                         x2={arrowX + arrowLength * direction}
-                                                        y2={pos.y + pos.height / 2}
-                                                        stroke={rod.distributedLoad > 0 ? 'green' : 'red'}
-                                                        strokeWidth="1.5"
+                                                        y2={rodCenterY}
+                                                        stroke="#999"
+                                                        strokeWidth="2.5"
                                                         markerEnd="url(#distributedArrow)"
                                                     />
                                                 );
                                             })}
                                         </>
                                     )}
-
                                 </>
                             )}
                         </g>
@@ -317,80 +396,52 @@ const BeamVisualizer: React.FC<BeamVisualizerProps> = ({ project }) => {
                 {project.nodes.map((node, i) => {
                     const nodeX = nodePositions[i];
                     const isFirstNode = i === 0;
+                    const isLastNode = i === project.nodes.length - 1;
                     const labelPos = nodeLabelPositions[i];
+                    
+                    // Получаем данные о стержне в позиции узла
+                    const rodData = getRodDataAtNode(i);
+                    const rodCenterY = rodData.rod.y + rodData.rod.height / 2;
+                    const rodBottomY = rodData.rod.bottomY;
 
                     return (
                         <g key={node.id}>
-                            {/* Опора (заделка) - штрихи под одинаковым углом 45 градусов  */}
-                            {node.fixed && (
-                                <>
-                                    <line
-                                        x1={nodeX}
-                                        y1={90}
-                                        x2={nodeX}
-                                        y2={120}
-                                        stroke="#000"
-                                        strokeWidth="3"
-                                    />
-                                    {[...Array(6)].map((_, idx) => {
-
-                                        const dx = 8;
-                                        const dy = 4;
-
-                                        // Для первого узла - смещаем начальную точку влево чтобы штрихи были снаружи
-                                        const startX = isFirstNode ? nodeX - 8 : nodeX;
-
-                                        return (
-                                            <line
-                                                key={idx}
-                                                x1={startX}
-                                                y1={90 + idx * 5}
-                                                x2={startX + dx}
-                                                y2={90 + idx * 5 + dy}
-                                                stroke="#000"
-                                                strokeWidth="1.5"
-                                            />
-                                        );
-                                    })}
-                                </>
-                            )}
+                            {/* Опора (заделка) - исправленная версия */}
+                            {node.fixed && renderFixedSupport(nodeX, rodData, isFirstNode, isLastNode)}
 
                             {/* Сосредоточенная сила */}
                             {node.externalForce !== 0 && (
-                                <>
-                                    <line
-                                        x1={nodeX}
-                                        y1={100}
-                                        x2={nodeX + (node.externalForce > 0 ? ARROW_LENGTH : -ARROW_LENGTH)}
-                                        y2={100}
-                                        stroke={node.externalForce > 0 ? 'blue' : 'orange'}
-                                        strokeWidth="2"
-                                        markerEnd="url(#concentratedArrow)"
-                                    />
-                                </>
+                                <line
+                                    x1={nodeX}
+                                    y1={rodCenterY}
+                                    x2={nodeX + (node.externalForce > 0 ? ARROW_LENGTH - 30 : -(ARROW_LENGTH - 30))}
+                                    y2={rodCenterY}
+                                    stroke="#000"
+                                    strokeWidth="3.5"
+                                    markerEnd="url(#concentratedArrow)"
+                                />
                             )}
 
-                            {/* Подпись узла - всегда читаемая */}
+                            {/* Подпись узла */}
                             <text
                                 x={nodeX + labelPos.offset}
                                 y={labelPos.y}
                                 textAnchor="middle"
-                                fontSize="10"
-                                fill="#333"
+                                fontSize="14"
+                                fill="#2c3e50"
                                 fontWeight="bold"
                             >
                                 У{node.id}
-                                {node.fixed}
                             </text>
 
                             {/* Маркер узла */}
                             <circle
                                 cx={nodeX}
-                                cy={100}
-                                r="3"
+                                cy={rodCenterY}
+                                r="6"
                                 fill="#fff"
-                                stroke="#333"
-                                strokeWidth="1.5"
+                                stroke="#2c3e50"
+                                strokeWidth="2.5"
                             />
                         </g>
                     );
@@ -400,8 +451,8 @@ const BeamVisualizer: React.FC<BeamVisualizerProps> = ({ project }) => {
                 {showScaleInfo && (
                     <text
                         x={NODE_OFFSET_X}
-                        y={185}
-                        fontSize="10"
+                        y={SVG_HEIGHT - 20}
+                        fontSize="13"
                         fill="#666"
                         fontWeight="bold"
                     >
@@ -410,15 +461,6 @@ const BeamVisualizer: React.FC<BeamVisualizerProps> = ({ project }) => {
                     </text>
                 )}
 
-                <text
-                    x={finalWidth - NODE_OFFSET_X}
-                    y={195}
-                    fontSize="10"
-                    fill="#888"
-                    textAnchor="end"
-                >
-                    Всего: {project.rods.length} стержней, {project.nodes.length} узлов
-                </text>
             </svg>
         </div>
     );

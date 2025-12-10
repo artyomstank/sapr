@@ -44,8 +44,13 @@ const PreprocessorPage: React.FC = () => {
     const handleCalculate = async () => {
         const result = await validateAndCalculate();
         if (result.success && result.displacements) {
-            navigate('/postprocessor', {
+            navigate('/calculation-success', {
                 state: { project, displacements: result.displacements },
+                replace: true
+            });
+        } else if (!result.success && result.errorMessage) {
+            navigate('/calculation-error', {
+                state: { error: result.errorMessage, project },
                 replace: true
             });
         }

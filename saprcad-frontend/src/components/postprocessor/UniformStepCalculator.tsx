@@ -84,11 +84,13 @@ const UniformStepCalculator = forwardRef<UniformStepHandle, Props>(({ rods }, re
                 </label>
                 <button
                     onClick={() => {
-                        const content = `Стержень,x,N(x),σ(x),u(x)\n` +
+                        const content = `Rod,x,N(x),sigma(x),u(x)\n` +
                             tableData.map(r =>
                                 `${r.rodId},${r.x.toFixed(4)},${r.N.toExponential(4)},${r.sigma.toExponential(4)},${r.u.toExponential(6)}`
                             ).join('\n');
-                        const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+                        // Добавляем BOM для корректной работы UTF-8 с русским текстом в Excel
+                        const bom = '\uFEFF';
+                        const blob = new Blob([bom + content], { type: 'text/csv;charset=utf-8' });
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
@@ -96,7 +98,7 @@ const UniformStepCalculator = forwardRef<UniformStepHandle, Props>(({ rods }, re
                         a.click();
                         URL.revokeObjectURL(url);
                     }}
-                    style={{ padding: '4px 10px', fontSize: '0.9em' }}
+                    style={{ padding: '4px 10px', fontSize: '0.9em' ,cursor: 'pointer',}}
                 >
                     Экспорт в CSV
                 </button>
@@ -104,9 +106,9 @@ const UniformStepCalculator = forwardRef<UniformStepHandle, Props>(({ rods }, re
 
             {tableData.length > 0 && (
                 <div style={{ maxHeight: '250px', overflow: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9em' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1.2em' }}>
                         <thead>
-                        <tr style={{ backgroundColor: '#4a90e2', color: 'white' }}>
+                        <tr style={{ backgroundColor: '#b7c3d1ff', color: 'white' }}>
                             <th>Стержень</th>
                             <th>x, м</th>
                             <th>N(x), Н</th>
@@ -116,7 +118,7 @@ const UniformStepCalculator = forwardRef<UniformStepHandle, Props>(({ rods }, re
                         </thead>
                         <tbody>
                         {tableData.map((row, i) => (
-                            <tr key={i} style={{ backgroundColor: row.isBoundary ? '#e8f5e9' : 'transparent' }}>
+                            <tr key={i} style={{ backgroundColor: row.isBoundary ? '#edededff' : 'transparent' }}>
                                 <td style={{ padding: '4px', textAlign: 'center' }}>{row.rodId}</td>
                                 <td style={{ padding: '4px', textAlign: 'center' }}>{row.x.toFixed(3)}</td>
                                 <td style={{ padding: '4px', textAlign: 'center', fontFamily: 'monospace' }}>{row.N.toExponential(3)}</td>
@@ -126,8 +128,8 @@ const UniformStepCalculator = forwardRef<UniformStepHandle, Props>(({ rods }, re
                         ))}
                         </tbody>
                     </table>
-                    <p style={{ fontSize: '0.85em', color: '#666', marginTop: '6px' }}>
-                        Подсвечены граничные сечения (начало и конец стержня)
+                    <p style={{ fontSize: '1em', color: '#666', marginTop: '6px' }}>
+                        Выделены начало и конец каждого стержня
                     </p>
                 </div>
             )}

@@ -18,15 +18,15 @@ const ResultTable: React.FC<ResultTableProps> = ({ result }) => {
                     minWidth: '800px'
                 }}>
                     <thead>
-                    <tr style={{ backgroundColor: '#4a90e2', color: 'white' }}>
+                    <tr style={{ backgroundColor: '#b7c3d1ff', color: 'white' }}>
                         <th style={{ padding: '10px', textAlign: 'center' }}>Стержень</th>
                         <th style={{ padding: '10px', textAlign: 'center' }}>L, м</th>
                         <th style={{ padding: '10px', textAlign: 'center' }}>A, м²</th>
                         <th style={{ padding: '10px', textAlign: 'center' }}>[σ], Па</th>
                         <th style={{ padding: '10px', textAlign: 'center' }}>max|σ|, Па</th>
                         <th style={{ padding: '10px', textAlign: 'center' }}>Прочность</th>
-                        <th style={{ padding: '10px', textAlign: 'center' }}>N₀, Н</th>
-                        <th style={{ padding: '10px', textAlign: 'center' }}>Nₗ, Н</th>
+                        <th style={{ padding: '10px', textAlign: 'center' }}>N-нач, Н</th>
+                        <th style={{ padding: '10px', textAlign: 'center' }}>N-кон, Н</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -47,14 +47,14 @@ const ResultTable: React.FC<ResultTableProps> = ({ result }) => {
                     <span
                         style={{
                             display: 'inline-block',
-                            padding: '2px 8px',
-                            borderRadius: '12px',
-                            backgroundColor: isSafe ? '#c8e6c9' : '#ffcdd2',
-                            color: isSafe ? '#2e7d32' : '#c62828',
+                            padding: '5px 10px',
+                            borderRadius: '0px',
+                            backgroundColor: isSafe ? '#339b36ff' : '#e55c6aff',
+                            color: isSafe ? '#ffffffff' : '#201616ff',
                             fontWeight: 'bold',
                         }}
                     >
-                      {isSafe ? '✓' : '✗'}
+                      {isSafe ? '+' : '-'}
                     </span>
                                 </td>
                                 <td style={{ padding: '8px', textAlign: 'center', fontFamily: 'monospace' }}>
@@ -70,7 +70,7 @@ const ResultTable: React.FC<ResultTableProps> = ({ result }) => {
                 </table>
             </div>
             <p style={{ fontSize: '0.9em', color: '#666', marginTop: '0.5rem' }}>
-                N₀ — продольная сила в начале стержня, Nₗ — в конце.
+                N-нач — продольная сила в начале стержня, N-кон — продольная сила в конце
             </p>
         </section>
     );

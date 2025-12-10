@@ -157,8 +157,8 @@ const FileControls: React.FC<FileControlsProps> = ({
                     onClick={onCalculate}
                     disabled={disabled}
                     style={{ 
-                        backgroundColor: '#4CAF50', 
-                        color: 'white', 
+                        backgroundColor: '#a1edafff', 
+                        color: 'black', 
                         padding: '8px 16px',
                         border: 'none',
                         borderRadius: '4px',
@@ -167,7 +167,7 @@ const FileControls: React.FC<FileControlsProps> = ({
                         fontSize: '1rem'
                     }}
                 >
-                    Выполнить расчёт →
+                    Расчитать...
                 </button>
             </div>
         </div>

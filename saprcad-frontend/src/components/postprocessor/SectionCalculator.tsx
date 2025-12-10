@@ -95,9 +95,9 @@ const SectionCalculator = forwardRef<SectionCalculatorHandle, SectionCalculatorP
                 {history.length > 0 && (
                     <button
                         onClick={clearHistory}
-                        style={{ padding: '4px 8px', fontSize: '0.85em', color: '#e53935', background: 'none', border: 'none' }}
+                        style={{ padding: '4px 8px', fontSize: '1em', color: '#e53935', background: '#f9f9f9', border: 'none',cursor:'pointer' }}
                     >
-                        Очистить историю ({history.length})
+                        Очистить все
                     </button>
                 )}
             </div>
@@ -128,7 +128,7 @@ const SectionCalculator = forwardRef<SectionCalculatorHandle, SectionCalculatorP
                     м
                 </label>
 
-                <button onClick={calculate} style={{ padding: '6px 12px' }}>
+                <button onClick={calculate} style={{ padding: '6px 12px' ,cursor: 'pointer'}}>
                     Рассчитать и добавить в историю
                 </button>
             </div>
@@ -160,7 +160,7 @@ const SectionCalculator = forwardRef<SectionCalculatorHandle, SectionCalculatorP
                                     </div>
                                     <button
                                         onClick={() => removeItem(item.id)}
-                                        style={{ padding: '2px 6px', fontSize: '0.8em', color: '#e53935', background: 'none', border: 'none' }}
+                                        style={{ padding: '5px 10px', fontSize: '1em', color: 'white', background: '#db4f4fff', border: 'none',cursor: 'pointer' }}
                                     >
                                         ✕
                                     </button>

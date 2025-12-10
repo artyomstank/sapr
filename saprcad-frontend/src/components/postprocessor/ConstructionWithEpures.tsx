@@ -234,25 +234,30 @@ const ConstructionWithEpures = forwardRef<SVGSVGElement, ConstructionWithEpuresP
                         <defs>
                             <marker
                                 id="concentratedArrow"
-                                markerWidth="8"
-                                markerHeight="8"
-                                refX="7"
-                                refY="4"
+                                markerWidth="16"
+                                markerHeight="16"
+                                refX="1"
+                                refY="8"
                                 orient="auto"
                             >
-                                <line x1="0" y1="4" x2="5" y2="4" stroke="currentColor" strokeWidth="2" />
-                                <path d="M5,2 L5,6 L7,4 Z" fill="currentColor" />
+                                <line x1="0" y1="8" x2="4" y2="8" stroke="currentColor" strokeWidth="3" />
+                                <path d="M4,5 L4,11 L16,8 Z" fill="currentColor" />
                             </marker>
                             <marker
                                 id="distributedArrow"
-                                markerWidth="4"
-                                markerHeight="4"
-                                refX="3"
-                                refY="2"
+                                markerWidth="8"
+                                markerHeight="8"
+                                refX="6"
+                                refY="4"
                                 orient="auto"
                             >
-                                <path d="M0,0 L0,4 L3,2 z" fill="currentColor" />
+                                <line x1="0" y1="4" x2="3" y2="4" stroke="#ff5e00ff" strokeWidth="2" />
+                                <path d="M3,1 L3,7 L8,4 z" fill="#ff5e00ff" />
                             </marker>
+                            <linearGradient id="rodGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#4a90e2" />
+                                <stop offset="100%" stopColor="#357abd" />
+                            </linearGradient>
                         </defs>
 
                         {/* Конструкция (как в препроцессоре) */}
@@ -267,7 +272,7 @@ const ConstructionWithEpures = forwardRef<SVGSVGElement, ConstructionWithEpuresP
                                             y={-pos.height / 2}
                                             width={pos.width}
                                             height={pos.height}
-                                            fill="#4a90e2"
+                                            fill="url(#rodGradient)"
                                             stroke="#2c3e50"
                                         />
                                         {pos.width > 50 ? (
@@ -296,7 +301,7 @@ const ConstructionWithEpures = forwardRef<SVGSVGElement, ConstructionWithEpuresP
                                                         y1={0}
                                                         x2={pos.x + pos.width / 2 + (rod.distributedLoad > 0 ? 10 : -10)}
                                                         y2={0}
-                                                        stroke={rod.distributedLoad > 0 ? 'green' : 'red'}
+                                                        stroke="#ff5e00ff"
                                                         strokeWidth="2"
                                                         markerEnd="url(#distributedArrow)"
                                                     />
@@ -311,7 +316,7 @@ const ConstructionWithEpures = forwardRef<SVGSVGElement, ConstructionWithEpuresP
                                                                 y1={0}
                                                                 x2={arrowX + (rod.distributedLoad > 0 ? 8 : -8)}
                                                                 y2={0}
-                                                                stroke={rod.distributedLoad > 0 ? 'green' : 'red'}
+                                                                stroke="#ff5e00ff"
                                                                 strokeWidth="1.5"
                                                                 markerEnd="url(#distributedArrow)"
                                                             />
@@ -356,9 +361,9 @@ const ConstructionWithEpures = forwardRef<SVGSVGElement, ConstructionWithEpuresP
                                             <line
                                                 x1={nodeX}
                                                 y1={0}
-                                                x2={nodeX + (node.externalForce > 0 ? ARROW_LENGTH : -ARROW_LENGTH)}
+                                                x2={nodeX + (node.externalForce > 0 ? ARROW_LENGTH - 10 : -(ARROW_LENGTH - 10))}
                                                 y2={0}
-                                                stroke={node.externalForce > 0 ? 'blue' : 'orange'}
+                                                stroke="#000"
                                                 strokeWidth="2"
                                                 markerEnd="url(#concentratedArrow)"
                                             />

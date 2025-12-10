@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"pipks/server"
+	"pipks/handler"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,9 +20,12 @@ func main() {
 		c.Next()
 	})
 
-	r.POST("/api/structure/preview", server.HandleStructure)
+	// Эндпоинты API
+	r.POST("/api/saprcad/submit", handler.HandleSubmit)
+	r.POST("/api/saprcad/calculate-structure", handler.HandleCalculate)
+	r.POST("/api/saprcad/full-calculation", handler.HandleFullCalculation)
 
-	err := r.Run(":8080")
+	err := r.Run(":8081")
 	if err != nil {
 		log.Fatal(err)
 	}

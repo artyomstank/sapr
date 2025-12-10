@@ -106,7 +106,31 @@ const EpurePlot: React.FC<EpurePlotProps> = ({
     return (
         <div style={{ border: '1px solid #ddd', borderRadius: '4px', padding: '10px', backgroundColor: '#fff' }}>
             <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
-                {/* Сетка */}
+                <defs>
+                    <marker
+                        id="concentratedArrowEpure"
+                        markerWidth="16"
+                        markerHeight="16"
+                        refX="1"
+                        refY="8"
+                        orient="auto"
+                    >
+                        <line x1="0" y1="8" x2="4" y2="8" stroke="currentColor" strokeWidth="3" />
+                        <path d="M4,5 L4,11 L16,8 Z" fill="currentColor" />
+                    </marker>
+
+                    <marker
+                        id="distributedArrowEpure"
+                        markerWidth="8"
+                        markerHeight="8"
+                        refX="6"
+                        refY="4"
+                        orient="auto"
+                    >
+                        <line x1="0" y1="4" x2="3" y2="4" stroke="#ff5e00ff" strokeWidth="2" />
+                        <path d="M3,1 L3,7 L8,4 z" fill="#ff5e00ff" />
+                    </marker>
+                </defs>
                 {xTicks.map(tick => (
                     <line
                         key={`x-grid-${tick.value}`}

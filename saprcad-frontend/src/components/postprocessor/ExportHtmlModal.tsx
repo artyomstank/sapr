@@ -97,51 +97,32 @@ const ExportHtmlModal: React.FC<ExportHtmlModalProps> = ({
   <title>САПР — Отчёт по расчёту НДС</title>
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px; }
-    header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #4a90e2; padding-bottom: 15px; }
-    h1 { color: #2c3e50; margin: 10px 0; }
-    h2 { color: #3498db; margin: 25px 0 15px; }
-    h3 { color: #2980b9; margin: 20px 0 12px; }
+    header { text-align: center}
+    h1 { color: #262b30ff; margin: 10px 0; }
+    h2 { color: #9fb1bcff; margin: 25px 0 15px; }
+    h3 { color: #9fb1bcff; margin: 20px 0 12px; }
     .meta { background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 15px 0; }
     .displacements { display: flex; flex-wrap: wrap; gap: 10px; }
     .disp-card { background: #e3f2fd; padding: 8px 16px; border-radius: 4px; min-width: 120px; text-align: center; }
     table { width: 100%; border-collapse: collapse; margin: 20px 0; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-    th { background-color: #4a90e2; color: white; }
+    th { background-color: #9fb1bcff; color: white; }
     .epure-svg { margin: 20px 0; border: 1px solid #eee; border-radius: 4px; overflow: hidden; }
-    .boundary { background-color: #e8f5e9; }
+    .boundary { background-color: #eaeaeaff; }
     footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #777; font-size: 0.9em; }
   </style>
 </head>
 <body>
   <header>
-    <h1>САПР стержневых систем</h1>
-    <h2>Отчёт по расчёту напряжённо-деформированного состояния</h2>
+    <h1>Система автоматизации прочностных расчётов стержневых систем, испытывающих растяжение-сжатие</h1>
+    <h2>ОТЧЕТ </h2>
     <div class="meta">
-      <p><strong>Дата:</strong> ${new Date().toLocaleString('ru-RU')}</p>
-      <p><strong>Стержней:</strong> ${rods.length}, <strong>узлов:</strong> ${rods.length + 1}</p>
+      <p><strong>Стержней:</strong> ${rods.length}, <strong>Узлов:</strong> ${rods.length + 1}</p>
     </div>
   </header>
 
-  ${selected.displacements ? `
-  <section>
-    <h3>Узловые перемещения ∆, м</h3>
-    <div class="displacements">
-      ${displacements.map((u, i) => `
-        <div class="disp-card">
-          <strong>Узел ${i}</strong><br>
-          ${u.toExponential(4)}
-        </div>
-      `).join('')}
-    </div>
-  </section>
-  ` : ''}
 
-  ${constructionSvg ? `
-  <section>
-    <h3>Конструкция и эпюры N(x), σ(x), u(x)</h3>
-    <div class="epure-svg">${constructionSvg}</div>
-  </section>
-  ` : ''}
+
 
   ${epureNSvg ? `
   <section>
@@ -163,6 +144,28 @@ const ExportHtmlModal: React.FC<ExportHtmlModalProps> = ({
     <div class="epure-svg">${epureUSvg}</div>
   </section>
   ` : ''}
+
+  ${constructionSvg ? `
+  <section>
+    <h3>Конструкция и эпюры N(x), σ(x), u(x)</h3>
+    <div class="epure-svg">${constructionSvg}</div>
+  </section>
+  ` : ''}
+
+  ${selected.displacements ? `
+  <section>
+    <h3>Узловые перемещения ∆, м</h3>
+    <div class="displacements">
+      ${displacements.map((u, i) => `
+        <div class="disp-card">
+          <strong>Узел ${i}</strong><br>
+          ${u.toExponential(4)}
+        </div>
+      `).join('')}
+    </div>
+  </section>
+  ` : ''}
+
 
   ${selected.table ? `
   <section>
@@ -192,7 +195,7 @@ const ExportHtmlModal: React.FC<ExportHtmlModalProps> = ({
               <td>${rod.area.toExponential(1)}</td>
               <td>${rod.allowableStress.toExponential(1)}</td>
               <td>${rod.maxStressOnTheRod.toExponential(1)}</td>
-              <td>${safe ? '✓' : '✗'}</td>
+              <td>${safe ? '+' : '-'}</td>
               <td>${N0.toFixed(0)}</td>
               <td>${Nl.toFixed(0)}</td>
             </tr>
@@ -200,6 +203,37 @@ const ExportHtmlModal: React.FC<ExportHtmlModalProps> = ({
             }).join('')}
       </tbody>
     </table>
+  </section>
+  ` : ''}
+
+  ${selected.uniformStep && uniformStepData.length > 0 ? `
+  <section>
+    <h3>Расчёт по равномерному шагу (${uniformStepData.length} точек)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Стержень</th>
+          <th>x, м</th>
+          <th>N(x), Н</th>
+          <th>σ(x), Па</th>
+          <th>u(x), м</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${uniformStepData.map(row => `
+          <tr ${row.isBoundary ? 'class="boundary"' : ''}>
+            <td>${row.rodId}</td>
+            <td>${row.x.toFixed(4)}</td>
+            <td>${row.N.toExponential(3)}</td>
+            <td>${row.sigma.toExponential(3)}</td>
+            <td>${row.u.toExponential(5)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <p style="font-size: 0.9em; color: #666;">
+      Подсвечены сечения на границах стержней (x = 0 и x = L<sub>i</sub>), начиная с x = 0.
+    </p>
   </section>
   ` : ''}
 
@@ -228,7 +262,7 @@ const ExportHtmlModal: React.FC<ExportHtmlModalProps> = ({
               <td>${item.N.toExponential(4)}</td>
               <td>${item.sigma.toExponential(4)}</td>
               <td>${item.u.toExponential(6)}</td>
-              <td style="color: ${safe ? '#2e7d32' : '#e53935'}">${safe ? '✓' : '✗'}</td>
+              <td style="color: ${safe ? '#2ace32ff' : '#e53935'}">${safe ? '+' : '-'}</td>
             </tr>
           `;
             }).join('')}
@@ -237,42 +271,11 @@ const ExportHtmlModal: React.FC<ExportHtmlModalProps> = ({
   </section>
   ` : ''}
 
-  ${selected.uniformStep && uniformStepData.length > 0 ? `
-  <section>
-    <h3>Расчёт по равномерному шагу (${uniformStepData.length} точек)</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Стержень</th>
-          <th>x, м</th>
-          <th>N(x), Н</th>
-          <th>σ(x), Па</th>
-          <th>u(x), м</th>
-          <th>Граница</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${uniformStepData.map(row => `
-          <tr ${row.isBoundary ? 'class="boundary"' : ''}>
-            <td>${row.rodId}</td>
-            <td>${row.x.toFixed(4)}</td>
-            <td>${row.N.toExponential(3)}</td>
-            <td>${row.sigma.toExponential(3)}</td>
-            <td>${row.u.toExponential(5)}</td>
-            <td>${row.isBoundary ? '✓' : ''}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-    <p style="font-size: 0.9em; color: #666;">
-      Подсвечены сечения на границах стержней (x = 0 и x = L<sub>i</sub>). 
-      Расчёт для каждого стержня начинается с x = 0.
-    </p>
-  </section>
-  ` : ''}
+
 
   <footer>
-    САПР стержневых систем. Курсовая работа. Вычислительная механика, 2025/26
+    Курсовая работа, кафедра ИСиТ, Майоров
+    <p><strong>Дата:</strong> ${new Date().toLocaleString('ru-RU')}</p>
   </footer>
 </body>
 </html>
@@ -292,7 +295,7 @@ const ExportHtmlModal: React.FC<ExportHtmlModalProps> = ({
 
         } catch (err) {
             console.error('Ошибка генерации HTML', err);
-            alert('Не удалось создать отчёт. Проверьте консоль.');
+            alert('Ошибка при создании отчета');
         } finally {
             setIsGenerating(false);
         }
@@ -354,8 +357,8 @@ const ExportHtmlModal: React.FC<ExportHtmlModalProps> = ({
                         disabled={isGenerating}
                         style={{
                             padding: '6px 16px',
-                            backgroundColor: isGenerating ? '#ccc' : '#2e7d32',
-                            color: 'white',
+                            backgroundColor: isGenerating ? '#ccc' : '#a1edafff',
+                            color: 'black',
                             border: 'none',
                             borderRadius: '4px',
                             cursor: isGenerating ? 'wait' : 'pointer',

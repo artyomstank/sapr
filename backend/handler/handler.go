@@ -2,51 +2,107 @@ package handler
 
 import (
 	"pipks/models"
+	"pipks/postprocessor"
+	"pipks/processor"
+	"pipks/validator"
+
+	"github.com/gin-gonic/gin"
 )
 
-func ValidateStructure(in models.StructureInput) models.ValidationResult {
-	var errs []string
-	var warns []string
+// HandleSubmit обрабатывает валидацию проекта
+func HandleSubmit(c *gin.Context) {
+	var input models.StructureInput
 
-	// 1. Проверка counts
-	if len(in.Nodes) != len(in.Rods)+1 {
-		errs = append(errs, "Количество узлов должно быть на 1 больше числа стержней")
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(400, gin.H{
+			"errors": []string{"Некорректный JSON"},
+		})
+		return
 	}
 
-	// 2. Проверка id подряд
-	for i, n := range in.Nodes {
-		if n.ID != i {
-			errs = append(errs, "Узел с ID не соответствует порядку массива")
-		}
+	errors := validator.ValidateStructure(&input)
+	if len(errors) > 0 {
+		c.JSON(400, gin.H{
+			"errors": errors,
+		})
+		return
 	}
 
-	// 3. Параметры стержней
-	for _, r := range in.Rods {
-		if r.Length <= 0 {
-			errs = append(errs, "Длина стержня должна быть > 0")
-		}
-		if r.Area <= 0 {
-			errs = append(errs, "Площадь должна быть > 0")
-		}
-		if r.ElasticModulus <= 0 {
-			errs = append(errs, "Модуль упругости должен быть > 0")
-		}
-		if r.AllowableStress <= 0 {
-			errs = append(errs, "Допускаемое напряжение должно быть > 0")
-		}
+	c.JSON(200, gin.H{
+		"status": "OK",
+		"errors": []string{},
+	})
+}
+
+// HandleCalculate обрабатывает расчёт смещений
+func HandleCalculate(c *gin.Context) {
+	var input models.StructureInput
+
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(400, gin.H{
+			"errors": []string{"Некорректный JSON"},
+		})
+		return
 	}
 
-	// 4. Проверка fixed nodes
-	for i, n := range in.Nodes {
-		if n.Fixed && !(i == 0 || i == len(in.Nodes)-1) {
-			errs = append(errs, "Заделки можно ставить только на крайних узлах")
-		}
+	// Валидация входных данных
+	errors := validator.ValidateStructure(&input)
+	if len(errors) > 0 {
+		c.JSON(400, gin.H{
+			"errors": errors,
+		})
+		return
 	}
 
-	return models.ValidationResult{
-		Nodes:    in.Nodes,
-		Rods:     in.Rods,
-		Errors:   errs,
-		Warnings: warns,
+	// Расчёт смещений
+	result, err := processor.CalculateDisplacements(&input)
+	if err != nil {
+		c.JSON(400, gin.H{
+			"errors": []string{err.Error()},
+		})
+		return
 	}
+
+	c.JSON(200, result)
+}
+
+// HandleFullCalculation обрабатывает полный расчёт
+func HandleFullCalculation(c *gin.Context) {
+	var input models.StructureInput
+
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(400, gin.H{
+			"errors": []string{"Некорректный JSON"},
+		})
+		return
+	}
+
+	// Валидация входных данных
+	errors := validator.ValidateStructure(&input)
+	if len(errors) > 0 {
+		c.JSON(400, gin.H{
+			"errors": errors,
+		})
+		return
+	}
+
+	// Расчёт смещений
+	displacementResult, err := processor.CalculateDisplacements(&input)
+	if err != nil {
+		c.JSON(400, gin.H{
+			"errors": []string{err.Error()},
+		})
+		return
+	}
+
+	// Расчёт полных результатов (усилия, напряжения, перемещения)
+	fullResult, err := postprocessor.CalculateNds(&input, displacementResult.Displacements)
+	if err != nil {
+		c.JSON(400, gin.H{
+			"errors": []string{err.Error()},
+		})
+		return
+	}
+
+	c.JSON(200, fullResult)
 }
