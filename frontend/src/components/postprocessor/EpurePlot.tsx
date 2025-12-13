@@ -1,4 +1,4 @@
-// src/components/postprocessor/EpurePlot.tsx
+// src/components/postprocessor/Plots.tsx
 import React from 'react';
 import {AxialForceCoeffs, DisplacementCoeffs, StressCoeffs} from "../../types/sapr.types";
 

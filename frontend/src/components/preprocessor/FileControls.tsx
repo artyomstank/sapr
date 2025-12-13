@@ -1,4 +1,4 @@
-// src/components/preprocessor/FileControls.tsx
+// src/components/preprocessor/FileOptions.tsx
 import React, { useRef } from 'react';
 
 interface FileControlsProps {
@@ -167,7 +167,7 @@ const FileControls: React.FC<FileControlsProps> = ({
                         fontSize: '1rem'
                     }}
                 >
-                    Расчитать...
+                    Рассчитать...
                 </button>
             </div>
         </div>

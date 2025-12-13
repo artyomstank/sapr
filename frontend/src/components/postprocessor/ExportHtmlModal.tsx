@@ -170,6 +170,20 @@ const ExportHtmlModal: React.FC<ExportHtmlModalProps> = ({
   ${selected.table ? `
   <section>
     <h3>Сводная таблица по стержням</h3>
+    ${rods.length > 0 ? (() => {
+      const allSafe = rods.every((rod: any) => Math.abs(rod.maxStressOnTheRod) <= rod.allowableStress);
+      const unsafeCount = rods.filter((rod: any) => Math.abs(rod.maxStressOnTheRod) > rod.allowableStress).length;
+      return `
+      <div style="padding: 12px; margin-bottom: 1rem; border-radius: 4px; background-color: ${allSafe ? '#e8f5e9' : '#ffebee'}; border-left: 4px solid ${allSafe ? '#4caf50' : '#f44336'}; font-weight: 500;">
+        <p style="margin: 0; color: ${allSafe ? '#2e7d32' : '#c62828'};">
+          ${allSafe 
+            ? '✓ Конструкция прочна. Все стержни работают в пределах допустимых напряжений.'
+            : `✗ Конструкция неустойчива. ${unsafeCount} стержень(ней) превышают допустимые напряжения.`
+          }
+        </p>
+      </div>
+      `;
+    })() : ''}
     <table>
       <thead>
         <tr>
@@ -274,7 +288,7 @@ const ExportHtmlModal: React.FC<ExportHtmlModalProps> = ({
 
 
   <footer>
-    Курсовая работа, кафедра ИСиТ, Майоров
+    Курсовая работа, кафедра ИИТ, Майоров
     <p><strong>Дата:</strong> ${new Date().toLocaleString('ru-RU')}</p>
   </footer>
 </body>

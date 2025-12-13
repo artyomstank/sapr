@@ -1,4 +1,4 @@
-// src/components/postprocessor/UniformStepCalculator.tsx
+// src/components/postprocessor/StepCalc.tsx
 import React, { useState, useMemo, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { RodResult } from '../../types/sapr.types';
 

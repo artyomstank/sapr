@@ -1,4 +1,4 @@
-// src/components/postprocessor/ConstructionWithEpures.tsx
+// src/components/postprocessor/BalkWithEpures.tsx
 import React, { forwardRef } from 'react';
 import { RodResult, Node } from '../../types/sapr.types';
 

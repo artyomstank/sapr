@@ -7,9 +7,36 @@ interface ResultTableProps {
 }
 
 const ResultTable: React.FC<ResultTableProps> = ({ result }) => {
+    // Вычисляем общую прочность конструкции
+    const allRodsAreSafe = result.resultOutput.every(rod => 
+        Math.abs(rod.maxStressOnTheRod) <= rod.allowableStress
+    );
+    
+    const unsafeRodsCount = result.resultOutput.filter(rod => 
+        Math.abs(rod.maxStressOnTheRod) > rod.allowableStress
+    ).length;
+    
     return (
         <section style={{ marginBottom: '2rem' }}>
             <h3>Сводная таблица по стержням</h3>
+            
+            {/* Заключение по прочности конструкции */}
+            <div style={{ 
+                padding: '12px', 
+                marginBottom: '1rem', 
+                borderRadius: '4px',
+                backgroundColor: allRodsAreSafe ? '#e8f5e9' : '#ffebee',
+                borderLeft: `4px solid ${allRodsAreSafe ? '#4caf50' : '#f44336'}`,
+                fontWeight: 500
+            }}>
+                <p style={{ margin: 0, color: allRodsAreSafe ? '#2e7d32' : '#c62828' }}>
+                    {allRodsAreSafe 
+                        ? '✓ Конструкция прочна. Все стержни работают в пределах допустимых напряжений.'
+                        : `✗ Конструкция неустойчива. ${unsafeRodsCount} стержень(ней) превышают допустимые напряжения.`
+                    }
+                </p>
+            </div>
+            
             <div style={{ overflowX: 'auto' }}>
                 <table style={{
                     width: '100%',

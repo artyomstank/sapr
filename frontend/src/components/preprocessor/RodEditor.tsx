@@ -1,4 +1,4 @@
-// src/components/preprocessor/RodEditor.tsx
+// src/components/preprocessor/Rod.tsx
 import React from 'react';
 import { Rod } from '../../types/sapr.types';
 
